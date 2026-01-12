@@ -1,0 +1,953 @@
+/* ============================================
+   THE DIGITAL THREAD — Quilt CSS (FULL)
+   - Palette (new)
+   - Type system: H* = Instrument Serif, rest = DM Mono caps
+   - Block colors decoupled from shapes (block-driven)
+   - Quilt blocks: bow / scg / figma / j / cats
+   - Modal: scalloped frame (desktop 4 sides), bottom-sheet (mobile/tablet top only)
+   - Bias binding: stroke + optional stitching line
+   - Footer: red rounded box, 2 columns
+   ============================================ */
+
+/* =========================
+   TOKENS
+   ========================= */
+:root {
+  /* Core palette */
+  --background: hsl(5, 61%, 95%);
+  --foreground: #CF4538;
+
+  --red: #CF4538;
+  --pink: hsl(352, 100%, 80%);   /* “gris” replacement */
+  --yellow: #FFD77C;
+  --blue: #ABCBD8;
+   --blue: hsl(200, 37%, 76%);
+  --brown: hsl(5, 25%, 20%);
+
+  /* Surfaces */
+  --card: #F8F0DD;
+  --border: rgba(207, 69, 56, 0.18);
+  --muted-foreground: rgba(207, 69, 56, 0.7);
+
+  /* Quilt */
+  --block-bg: #fcf3e0; /* background for cells */
+  --binding-accent: var(--red);
+
+  /* Typography */
+  --font-serif: "Instrument Serif", serif;
+  --font-mono: "DM Mono", monospace;
+
+  /* Scalloped modal */
+  --scallop-r: 18px; /* tweak */
+}
+
+/* =========================
+   RESET
+   ========================= */
+*,
+*::before,
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { overflow-y: scroll; }
+
+/* =========================
+   CUSTOM CURSOR
+   ========================= */
+.custom-cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1px solid var(--pink);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.custom-cursor.hover {
+  width: 100px;
+  height: 40px;
+  border-radius: 999px; /* pill shape */
+  background: var(--foreground);
+  border: 1px solid var(--pink);
+}
+
+/* ✅ JS crea .marquee (contenedor) y .marquee-content (dos copias) */
+.marquee {
+  position: absolute;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  will-change: transform;
+}
+
+/* ✅ en hover mostramos y animamos el contenedor real */
+.custom-cursor.hover .marquee {
+  opacity: 1;
+  animation: marquee-scroll 8s linear infinite;
+}
+
+/* ✅ el texto real está en .marquee-content (no existe .cursor-text) */
+.marquee-content {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--background);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-right: 0.5em;
+
+  /* para que las dos copias se pongan en línea */
+  flex: 0 0 auto;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Hide default cursor on desktop */
+@media (min-width: 1024px) {
+  body,
+  .quilt-block,
+  button,
+  a {
+    cursor: none !important;
+  }
+}
+
+
+/* =========================
+   TYPE SYSTEM
+   ========================= */
+body {
+  background: var(--background);
+  color: var(--foreground);
+
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* All headings in Instrument Serif */
+h1, h2, h3, h4, h5, h6,
+.title,
+.modal-title,
+.footer-box h2 {
+  font-family: var(--font-serif);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  overflow: hidden;
+}
+
+/* =========================
+   LAYOUT
+   ========================= */
+.container { min-height: 100vh; padding: 1rem; }
+@media (min-width: 768px) { .container { padding: 2rem; } }
+@media (min-width: 1024px) { .container { padding: 3rem; } }
+
+.header { text-align: center; margin-bottom: 2rem; }
+@media (min-width: 768px) { .header { margin-bottom: rem; } }
+
+.title { font-size: 3rem; font-weight: 400; margin-bottom: 0.5rem; letter-spacing: -0.1rem; }
+@media (min-width: 768px) { .title { font-size: 4rem; } }
+
+.subtitle {
+  font-size: 0.95em;
+  color: var(--muted-foreground);
+  max-width: 42rem;
+  margin: 0 auto;
+  text-transform: uppercase;
+}
+
+/* =========================
+   BIAS BINDING — scalloped + stroke (no ::before)
+   ========================= */
+.bias-binding{
+  --r: 18px;          /* radio de scallop */
+  --stroke: 1px;     /* grosor del borde scallop */
+  --pad: 2em;         /* padding extra interior (si lo quieres) */
+
+  position: relative;
+  max-width: 64rem;
+  margin: 0 auto;
+
+  /* el “borde” es el padding: stroke + padding interior opcional */
+  padding: calc(var(--stroke) + var(--pad));
+
+  /* 2 capas:
+     1) relleno (content-box)
+     2) borde (border-box)
+  */
+  background:
+    linear-gradient(var(--background) 0 0) content-box,
+    linear-gradient(var(--binding-accent) 0 0) border-box;
+  background-clip: content-box, border-box;
+
+  /* scallops hacia fuera */
+  -webkit-mask:
+    linear-gradient(#000 0 0) no-repeat
+      50% / calc(100% - 2*var(--r)) calc(100% - 2*var(--r)),
+    radial-gradient(farthest-side, #000 97%, transparent)
+      0 0 / calc(2*var(--r)) calc(2*var(--r)) round;
+  mask:
+    linear-gradient(#000 0 0) no-repeat
+      50% / calc(100% - 2*var(--r)) calc(100% - 2*var(--r)),
+    radial-gradient(farthest-side, #000 97%, transparent)
+      0 0 / calc(2*var(--r)) calc(2*var(--r)) round;
+}
+
+
+
+
+/* =========================
+   QUILT GRID
+   ========================= */
+.quilt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .quilt-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.quilt-block {
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+  box-shadow:
+    inset 2px 2px 3px rgba(0, 0, 0, 0.08),
+    inset -2px -2px 3px rgba(0, 0, 0, 0.08),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.25);
+
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.18);
+}
+
+/* =========================
+   BLOCK GRID — size by CSS var
+   ========================= */
+.block-grid {
+  --grid-size: 4;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), 1fr);
+  grid-template-rows: repeat(var(--grid-size), 1fr);
+  gap: 0;
+}
+
+.cell {
+  width: 100%;
+  height: 100%;
+  background: var(--block-bg);
+}
+
+/* =========================
+   BLOCK COLOR ASSIGNMENT (decoupled from shapes)
+   ========================= */
+#block-1 { --block-color: var(--yellow); }
+#block-6 { --block-color: var(--pink); }
+
+#block-2,
+#block-4,
+#block-5,
+#block-7 { --block-color: var(--pink); }
+
+#block-3 { --block-color: var(--blue); }
+
+#block-8 { --block-color: var(--yellow); }
+
+/* =========================
+   GRID SIZES PER BLOCK
+   ========================= */
+#block-1 { --grid-size: 9; }
+#block-3 { --grid-size: 8; }
+#block-6 { --grid-size: 7; }
+
+#block-2,
+#block-4,
+#block-5,
+#block-7,
+#block-8 { --grid-size: 4; }
+
+/* =========================
+   SHAPE PRIMITIVES (triangles / circles)
+   ========================= */
+
+/* Triangles: use ::before with block color */
+.pattern-bow .cell,
+.pattern-scg .cell,
+.pattern-j .cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.pattern-bow .cell::before,
+.pattern-scg .cell::before,
+.pattern-j .cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--block-color);
+  display: none;
+}
+
+/* Circles (figma): quarter circles via 200% circle clipped by cell */
+.pattern-figma .cell {
+  position: relative;
+  overflow: hidden;
+  background: var(--block-bg);
+}
+.pattern-figma .cell::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  border-radius: 50%;
+  background: var(--block-color);
+  display: none;
+}
+
+/* Cats: grey/yellow blocks with white cutouts */
+.pattern-cats .cell {
+  position: relative;
+  overflow: hidden;
+  background: var(--yellow);
+}
+.pattern-cats .cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--yellow);
+  display: none;
+}
+
+/* =========================
+   PATTERN: BOW (9x9)
+   ========================= */
+.pattern-bow .cell {
+    background-color: var(--yellow);
+}
+
+/* solid filled squares */
+.pattern-bow .cell-12,
+.pattern-bow .cell-16,
+.pattern-bow .cell-20,
+.pattern-bow .cell-26,
+.pattern-bow .cell-30,
+.pattern-bow .cell-32,
+.pattern-bow .cell-34,
+.pattern-bow .cell-48,
+.pattern-bow .cell-52,
+.pattern-bow .cell-56,
+.pattern-bow .cell-62 {
+  background: var(--red);
+}
+
+/* tri-br-tl (◤) */
+.pattern-bow .cell-11::before,
+.pattern-bow .cell-15::before,
+.pattern-bow .cell-40::before,
+.pattern-bow .cell-47::before {
+  display: block;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: var(--red);
+}
+
+/* tri-bl-tr (◥) */
+.pattern-bow .cell-13::before,
+.pattern-bow .cell-17::before,
+.pattern-bow .cell-42::before,
+.pattern-bow .cell-53::before {
+  display: block;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+  background: var(--red);
+}
+
+/* tri-tr-bl (╱) */
+.pattern-bow .cell-22::before,
+.pattern-bow .cell-29::before,
+.pattern-bow .cell-33::before,
+.pattern-bow .cell-51::before,
+.pattern-bow .cell-71::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  background: var(--red);
+}
+
+/* tri-tl-br (╲) */
+.pattern-bow .cell-24::before,
+.pattern-bow .cell-31::before,
+.pattern-bow .cell-35::before,
+.pattern-bow .cell-49::before,
+.pattern-bow .cell-65::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  background: var(--red);
+}
+
+/* =========================
+   PATTERN: SCG (4x4) — reusable for blocks 2/4/5/7
+   ========================= */
+.pattern-scg .cell { background: var(--pink); }
+
+/* solid squares */
+.pattern-scg .cell-1,
+.pattern-scg .cell-4,
+.pattern-scg .cell-13,
+.pattern-scg .cell-16 {
+  background: var(--red);
+}
+
+/* tri-tr-bl (╱) */
+.pattern-scg .cell-2::before,
+.pattern-scg .cell-10::before,
+.pattern-scg .cell-12::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  background: var(--red);
+}
+
+/* tri-tl-br (╲) */
+.pattern-scg .cell-3::before,
+.pattern-scg .cell-11::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  background: var(--red);
+}
+
+/* tri-br-tl (◤) */
+.pattern-scg .cell-6::before,
+.pattern-scg .cell-8::before,
+.pattern-scg .cell-14::before {
+  display: block;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: var(--red);
+}
+
+/* tri-bl-tr (◥) */
+.pattern-scg .cell-5::before,
+.pattern-scg .cell-7::before,
+.pattern-scg .cell-15::before {
+  display: block;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+  background: var(--red);
+}
+
+/* tri-tl-bl (interpretación) */
+.pattern-scg .cell-9::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  background: var(--red);
+}
+
+/* =========================
+   PATTERN: FIGMA (8x8) — quarter-circles
+   ========================= */
+.pattern-figma .cell { background: var(--pink); }
+
+/* “solid” cells (filled) */
+.pattern-figma .cell-12,
+.pattern-figma .cell-13,
+.pattern-figma .cell-20,
+.pattern-figma .cell-21,
+.pattern-figma .cell-28,
+.pattern-figma .cell-36,
+.pattern-figma .cell-44 {
+  background: var(--red);
+}
+
+/* TL quarter (circle centered top-left of the 2x2 cell group) */
+.pattern-figma .cell-22::before,
+.pattern-figma .cell-38::before,
+.pattern-figma .cell-52::before {
+  display: block;
+  left: -100%;
+  top: -100%;
+  background: var(--red);
+}
+
+/* TR quarter */
+.pattern-figma .cell-19::before,
+.pattern-figma .cell-35::before,
+.pattern-figma .cell-37::before,
+.pattern-figma .cell-51::before {
+  display: block;
+  left: 0;
+  top: -100%;
+  background: var(--red);
+}
+
+/* BL quarter */
+.pattern-figma .cell-14::before,
+.pattern-figma .cell-30::before {
+  display: block;
+  left: -100%;
+  top: 0;
+  background: var(--red);
+}
+
+/* BR quarter */
+.pattern-figma .cell-11::before,
+.pattern-figma .cell-27::before,
+.pattern-figma .cell-29::before,
+.pattern-figma .cell-43::before {
+  display: block;
+  left: 0;
+  top: 0;
+  background: var(--red);
+}
+
+/* =========================
+   PATTERN: J (7x7)
+   ========================= */
+.pattern-j .cell { background: var(--blue); }
+
+/* solid squares */
+.pattern-j .cell-12,
+.pattern-j .cell-19,
+.pattern-j .cell-26,
+.pattern-j .cell-30,
+.pattern-j .cell-33,
+.pattern-j .cell-38,
+.pattern-j .cell-39 {
+  background: var(--red);
+}
+
+/* triangle type A */
+.pattern-j .cell-11::before,
+.pattern-j .cell-37::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  background: var(--red);
+}
+
+/* triangle type B */
+.pattern-j .cell-13::before,
+.pattern-j .cell-40::before {
+  display: block;
+  clip-path: polygon(0 0, 0 100%, 100% 0);
+  background: var(--red);
+}
+
+/* =========================
+   PATTERN: CATS (4x4) — block 8
+   ========================= */
+.pattern-cats { background: var(--yellow); }
+
+/* solid squares */
+.pattern-cats .cell-5,
+.pattern-cats .cell-16 {
+  background: var(--block-color);
+}
+
+/* grey/yellow squares with white triangle cutouts */
+.pattern-cats .cell-1,
+.pattern-cats .cell-6,
+.pattern-cats .cell-5,
+.pattern-cats .cell-9 {
+  background: var(--red);
+}
+
+.pattern-cats .cell-12,
+.pattern-cats .cell-16,
+.pattern-cats .cell-15 {
+  background: var(--red);
+}
+
+/* cell-1: white triangle TL->BR */
+.pattern-cats .cell-1::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+/* cell-6 & cell-9: missing TL (white triangle at TL) */
+.pattern-cats .cell-6::before,
+.pattern-cats .cell-9::before {
+  display: block;
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+}
+
+/* cell-12: missing BL */
+.pattern-cats .cell-12::before {
+  display: block;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+/* cell-15: missing TR */
+.pattern-cats .cell-15::before {
+  display: block;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+/* =========================
+   MODAL
+   ========================= */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active{
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Desktop: scalloped frame all around */
+.modal-content{
+  width: 100%;
+  max-width: 28rem;
+  position: relative;
+
+  padding: calc(1 * var(--scallop-r));
+  background: var(--binding-accent);
+
+  -webkit-mask:
+    linear-gradient(#000 0 0) no-repeat
+      50% / calc(100% - 2 * var(--scallop-r))
+           calc(100% - 2 * var(--scallop-r)),
+    radial-gradient(farthest-side, #000 97%, transparent)
+      0 0 / calc(2 * var(--scallop-r))
+           calc(2 * var(--scallop-r)) round;
+
+  mask:
+    linear-gradient(#000 0 0) no-repeat
+      50% / calc(100% - 2 * var(--scallop-r))
+           calc(100% - 2 * var(--scallop-r)),
+    radial-gradient(farthest-side, #000 97%, transparent)
+      0 0 / calc(2 * var(--scallop-r))
+           calc(2 * var(--scallop-r)) round;
+
+  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+  transform: scale(0.985);
+  transition: transform 0.25s ease;
+}
+
+.modal-overlay.active .modal-content{
+  transform: scale(1);
+}
+
+/* inner layout: scroll area + sticky nav */
+.modal-inner{
+  background: var(--card);
+  color: var(--foreground);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5em;
+
+  /* clave para anclar la nav abajo */
+  display: flex;
+  flex-direction: column;
+  max-height: min(78vh, 720px);
+
+  overflow: hidden;
+  position: relative;
+}
+
+/* handle */
+.modal-inner::before{
+  content: "";
+  display: block;
+  width: 52px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(207, 69, 56, 0.22);
+  margin: 0.75rem auto 0.5rem;
+  flex: 0 0 auto;
+}
+
+.modal-close{
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  line-height: 1;
+  padding: 0.25rem;
+  transition: color 0.2s ease;
+  font-family: var(--font-mono);
+}
+.modal-close:hover{ color: var(--foreground); }
+
+/* scrolling content */
+.modal-scroll{
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+
+  /* 👇 vuelve a izquierda */
+  text-align: left;
+}
+
+/* preview centrado, texto no */
+.modal-block-preview{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.modal-block-preview .quilt-block{
+  width: clamp(220px, 30vw, 440px);
+  border-radius: 1em;
+  aspect-ratio: 1;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Title stays serif (ya lo tienes en tu type system) */
+.modal-title{
+  font-size: 1.6rem;
+  font-weight: 00;
+  margin-bottom: 0.5rem;
+  padding-right: 2rem;
+  color: var(--foreground);
+}
+
+
+/* NAV (base: aplica también en desktop) */
+.modal-nav{
+  position: sticky;
+  bottom: 0;
+
+  display: grid;
+  grid-template-columns: 44px auto 44px;
+  align-items: center;
+  gap: 0.75rem;
+
+  background: var(--red);
+  padding: 0.75em 1em;
+  border-radius: 1em;
+
+  border-top: 1px solid rgba(0,0,0,0.08);
+  margin-top: 1.5em;
+}
+
+.modal-nav-btn{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: var(--background);
+  color: var(--foreground);
+
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+}
+.modal-nav-btn:active{ transform: scale(0.96); }
+
+.modal-nav-count{
+  text-transform: uppercase;
+  color: var(--background);
+  text-align: center;
+}
+
+/* =========================
+   Mobile/Tablet: bottom sheet
+   - scallops only on top
+   - no lateral/bottom frame visible
+   ========================= */
+@media (max-width: 1023px){
+  .modal-overlay{
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .modal-content{
+    max-width: 100%;
+    width: 100%;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+
+    background:
+      linear-gradient(var(--binding-accent), var(--binding-accent))
+      top / 100% calc(1 * var(--scallop-r)) no-repeat;
+
+    padding-top: calc(1 * var(--scallop-r));
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+
+    -webkit-mask:
+      linear-gradient(#000 0 0) no-repeat
+        50% 100% / 100% calc(100% - var(--scallop-r)),
+      radial-gradient(farthest-side, #000 97%, transparent)
+        0 0 / calc(2 * var(--scallop-r)) calc(2 * var(--scallop-r)) repeat-x;
+
+    mask:
+      linear-gradient(#000 0 0) no-repeat
+        50% 100% / 100% calc(100% - var(--scallop-r)),
+      radial-gradient(farthest-side, #000 97%, transparent)
+        0 0 / calc(2 * var(--scallop-r)) calc(2 * var(--scallop-r)) repeat-x;
+
+    box-shadow: none;
+  }
+
+  .modal-overlay.active .modal-content{
+    transform: translateY(0);
+  }
+
+  .modal-inner{
+    height: 60vh;
+
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    max-height: none;
+  }
+
+  .modal-scroll{
+    padding: 1.25rem;
+    text-align: left; /* 👈 también izquierda en mobile */
+  }
+
+  /* nav a ras: sin “flotar” con márgenes laterales si no quieres */
+  .modal-nav{
+    margin-top: 2em;
+    border-radius: 1em;
+  }
+
+  .modal-content.dragging{
+    transition: none !important;
+  }
+
+    .modal-nav{ position: fixed; left:0; right:0; bottom:0; margin:0; border-radius: 1em 1em 0 0; }
+  .modal-scroll{ padding-bottom: calc(1.25rem + 72px); }
+}
+
+
+/* =========================
+   FOOTER — red rounded box, 2 columns
+   ========================= */
+.footer {
+  margin-top: 2rem;
+  color: var(--muted-foreground);
+}
+
+.footer-box {
+  background: var(--red);
+  color: var(--background);
+  border-radius: 2em;
+  padding: 1.25rem 1.5rem;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.footer-box h2 {
+  font-size: 3em;
+  color: var(--background);
+}
+
+.footer-box p {
+  color: var(--background);
+}
+
+.footer-col--right {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .footer-box { grid-template-columns: 1fr; }
+  .footer-col--right { justify-content: flex-start; text-align: left; }
+}
+
+html { overflow-y: scroll; }
+
+
+/* 404 */
+
+.page-404{
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: clamp(2rem, 6vh, 4rem);
+}
+
+.error-hero{
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding-top: clamp(2.5rem, 10vh, 7rem);
+  padding-bottom: clamp(1.5rem, 6vh, 3rem);
+}
+
+.error-title{
+  color: var(--foreground);   
+  line-height: 1.05;
+  font-size: clamp(2.2rem, 4.8vw, 4.2rem);
+  margin: 0 0 1.25rem 0;
+}
+
+.error-subtitle{
+  margin: 0 0 2.25rem 0;
+}
+
+.error-cta{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+
+  padding: 0.85em 1.4em;
+  border-radius: 999px;
+
+  background: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  border: 1px solid var(--red);
+}
+
+.error-cta:hover{
+  background: var(--red);
+  color: var(--background);
+
+}
+
